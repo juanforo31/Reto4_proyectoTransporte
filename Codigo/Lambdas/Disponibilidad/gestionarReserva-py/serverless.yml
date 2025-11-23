@@ -1,0 +1,43 @@
+org: jikko
+service: gestionarReserva-py
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  environment:
+    TABLE_NAME: Reserva
+    HEARTBEAT_TARGET: monitor-failover-py-dev-monitorFailover
+    SOURCE_NAME: lambda-gestionar-py
+    SOURCE_URL: https://gfwxbcgofd.execute-api.us-east-1.amazonaws.com/dev/reserve
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:us-east-1:652276263254:table/Reserva
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - arn:aws:lambda:us-east-1:652276263254:function:monitor-failover-py-dev-monitorFailover
+        - arn:aws:lambda:us-east-1:652276263254:function:monitor-failover-py-dev-monitorFailover:*
+
+functions:
+  reservation:
+    handler: handler.lambda_handler
+    events:
+      - http:
+          path: reserve
+          method: post
+      - schedule:
+          rate: cron(0/5 * * * ? *)  # cada 15 minutos
+
+resources:
+  Resources:
+    ActiveAlias:
+      Type: AWS::Lambda::Alias
+      Properties:
+        Name: active
+        FunctionName:
+          Ref: ReservationLambdaFunction   # referencia automática
+        FunctionVersion: $LATEST

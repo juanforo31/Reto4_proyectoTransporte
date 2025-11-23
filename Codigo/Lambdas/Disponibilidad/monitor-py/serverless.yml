@@ -1,0 +1,53 @@
+service: monitor-failover-py
+org: jikko
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: us-east-1
+  environment:
+    TABLA_ESTADO: ServiceState
+    OBJETIVO_FAILOVER: gestionarReserva-node-dev-reservation
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:UpdateItem
+        - dynamodb:PutItem
+      Resource:
+        - arn:aws:dynamodb:us-east-1:652276263254:table/ServiceState
+
+resources:
+  Resources:
+    ServiceStateTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ServiceState
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+functions:
+  monitorFailover:
+    handler: handler.lambda_handler
+    events:
+      - http:
+          path: estado
+          method: get
+      - http:
+          path: latido
+          method: post
+      - eventBridge:
+          pattern:
+            source:
+              - "aws.cloudwatch"
+            detail-type:
+              - "CloudWatch Alarm State Change"
+            detail:
+              state:
+                value:
+                  - "ALARM"

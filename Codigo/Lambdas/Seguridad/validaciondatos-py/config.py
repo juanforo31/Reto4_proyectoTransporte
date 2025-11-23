@@ -1,0 +1,1 @@
+SECRET_KEY = b"Empresa de transporte G2"

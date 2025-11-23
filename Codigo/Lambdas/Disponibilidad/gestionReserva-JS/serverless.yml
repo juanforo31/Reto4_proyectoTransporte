@@ -1,0 +1,34 @@
+org: jikko
+service: gestionarReserva-node
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    TABLE_NAME: Reserva
+    HEARTBEAT_TARGET: monitor-failover-py-dev-monitorFailover
+    SOURCE_NAME: lambda-gestionar-js
+    SOURCE_URL: https://hr1orhapq6.execute-api.us-east-1.amazonaws.com/dev/reserva
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: arn:aws:dynamodb:us-east-1:652276263254:table/Reserva
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - arn:aws:lambda:us-east-1:652276263254:function:monitor-failover-py-dev-monitorFailover
+        - arn:aws:lambda:us-east-1:652276263254:function:monitor-failover-py-dev-monitorFailover:*
+
+functions:
+  reservation:
+    handler: handler.lambdaHandler
+    events:
+      - http:
+          path: reserva
+          method: post
+      - schedule:
+          rate: cron(0/5 * * * ? *)  # cada 15 minutos
+          enabled: true
