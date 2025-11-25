@@ -31,4 +31,8 @@ El cuaderno recopila:
 - El proceso paso a paso del laboratorio.
 - Reflexiones y **conclusiones** sobre la implementación y resultados.
 
+---
 
+## 📘 Video del experimiento
+
+El experimiento se puede ver en el siguiente link https://www.youtube.com/watch?v=hkhGkOMoGUU
